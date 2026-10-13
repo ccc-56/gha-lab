@@ -1,0 +1,55 @@
+name: pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      break_tests:
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - id: ver
+        run: echo "version=1.0.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+      - run: |
+          mkdir dist
+          echo "app build ${{ steps.ver.outputs.version }}" > dist/app.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os_version: [ubuntu-22.04, ubuntu-24.04]
+        suite: [unit, integration]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+      - run: cat app.txt
+      - run: echo "testing ${{ matrix.suite }} on ${{ matrix.os_version }}"
+      - if: inputs.break_tests && matrix.suite == 'integration'
+        run: exit 1
+
+  deploy:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "deploying version ${{ needs.build.outputs.version }}"
+
+  notify:
+    needs: [deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "pipeline finished, deploy result = ${{ needs.deploy.result }}"
+
