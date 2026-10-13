@@ -27,7 +27,11 @@ jobs:
         run: echo "target=${{ inputs.target }} dry_run=${{ inputs.dry_run }}"
 
       - if: github.event_name == 'pull_request'
-        run: echo "PR #${{ github.event.pull_request.number }} from ${{ github.head_ref }}"
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          echo "PR #$PR_NUMBER from $HEAD_REF"
 
       - if: inputs.target == 'prod' && inputs.dry_run == false
         run: echo "REAL PROD DEPLOY would happen here"
