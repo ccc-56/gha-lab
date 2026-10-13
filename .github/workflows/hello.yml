@@ -1,0 +1,29 @@
+name: hello
+
+on:
+  push:
+
+jobs:
+  say-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print greeting
+        run: echo "Hello from GitHub Actions"
+
+      - name: Who and where am I?
+        run: |
+          echo "repo:    ${{ github.repository }}"
+          echo "branch:  ${{ github.ref_name }}"
+          echo "commit:  ${{ github.sha }}"
+          echo "actor:   ${{ github.actor }}"
+          echo "event:   ${{ github.event_name }}"
+          uname -a
+          cat /etc/os-release | head -2
+          pwd && ls -la
+
+      - name: Checkout my code
+        uses: actions/checkout@v4
+
+      - name: Now the repo is here
+        run: ls -la
+
